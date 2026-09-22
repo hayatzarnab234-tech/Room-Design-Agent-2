@@ -8,10 +8,7 @@ from rag import retrieve_knowledge
 
 
 def get_api_key():
-
-    # Try Streamlit secrets first
     try:
-
         import streamlit as st
 
         if "GEMINI_API_KEY" in st.secrets:
@@ -20,7 +17,6 @@ def get_api_key():
     except Exception:
         pass
 
-    # Fall back to environment variable
     return os.getenv("GEMINI_API_KEY")
 
 
@@ -29,22 +25,17 @@ def generate_room_design(room_data):
     api_key = get_api_key()
 
     if not api_key:
-
         raise RuntimeError(
             "GEMINI_API_KEY is missing. "
-            "Add it to .streamlit/secrets.toml locally "
-            "or add it through Streamlit Cloud Secrets."
+            "Add it to Streamlit Cloud Secrets."
         )
 
-    # Create Gemini client
     client = genai.Client(
         api_key=api_key
     )
 
-    # Retrieve relevant design knowledge
     knowledge = retrieve_knowledge(room_data)
 
-    # Build user prompt
     user_prompt = f"""
 Create a practical residential interior design using the information below.
 
@@ -98,21 +89,16 @@ If important information is missing, state what is missing.
 Follow the required output structure exactly.
 """
 
-    # Generate response
     response = client.models.generate_content(
-
-        model="model="gemini-3.8-flash",
-
+        model="gemini-3.6-flash",
         config=types.GenerateContentConfig(
             system_instruction=ROOM_DESIGN_SYSTEM_PROMPT,
             temperature=0.4
         ),
-
         contents=user_prompt
     )
 
     if not response.text:
-
         raise RuntimeError(
             "Gemini returned an empty response."
         )
